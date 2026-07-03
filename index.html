@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DnD Map Constructor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="main-menu" class="screen">
+        <div class="menu-box">
+            <h1>🎲 DnD Map Constructor</h1>
+            <div class="input-group">
+                <input type="text" id="new-world-name" placeholder="Название нового мира...">
+                <button id="btn-create-world">Создать новый мир</button>
+            </div>
+            <hr>
+            <div class="upload-group">
+                <label for="upload-world-file" class="file-label">📂 Загрузить мир (.json)</label>
+                <input type="file" id="upload-world-file" accept=".json">
+            </div>
+        </div>
+    </div>
+
+    <div id="app-screen" class="screen hidden">
+        
+        <header>
+            <h2 id="display-world-name">Мир: </h2>
+            <div class="header-buttons">
+                <button id="btn-toggle-mode" class="btn-mode-edit">Режим: Редактор</button>
+                <button id="btn-open-global-map">🗺️ Полная карта</button>
+                <button id="btn-save-world">💾 Сохранить в файл</button>
+                <button id="btn-exit-menu">🚪 Выйти в меню</button>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <aside class="left-panel">
+                <h3 class="panel-title">Локация (<span id="coord-display">25,25</span>)</h3>
+                
+                <div class="editor-only ui-section">
+                    <h4>Картинка локации</h4>
+                    <input type="file" id="loc-image-input" accept="image/*">
+                </div>
+
+                <div class="ui-section">
+                    <h4>Состояния локации</h4>
+                    <select id="loc-state-select"></select>
+                    <div class="editor-only row-buttons">
+                        <button id="btn-add-state">+ Добавить</button>
+                        <button id="btn-delete-state" class="btn-danger">❌ Удалить</button>
+                    </div>
+                </div>
+
+                <div class="ui-section editor-only">
+                    <h4>Добавить персонажа на локацию</h4>
+                    <select id="spawn-character-select"></select>
+                    <button id="btn-spawn-character">Выставить на карту</button>
+                </div>
+            </aside>
+
+            <main class="location-view">
+                <div class="location-wrapper" id="location-wrapper">
+                    <button class="arrow arrow-n" data-dir="N">⬆️</button>
+                    <button class="arrow arrow-ne" data-dir="NE">↗️</button>
+                    <button class="arrow arrow-e" data-dir="E">➡️</button>
+                    <button class="arrow arrow-se" data-dir="SE">↘️</button>
+                    <button class="arrow arrow-s" data-dir="S">⬇️</button>
+                    <button class="arrow arrow-sw" data-dir="SW">↙️</button>
+                    <button class="arrow arrow-w" data-dir="W">⬅️</button>
+                    <button class="arrow arrow-nw" data-dir="NW">↖️</button>
+
+                    <div id="location-canvas">
+                        </div>
+                </div>
+            </main>
+
+            <aside class="right-panel">
+                <h3 class="panel-title">Пул персонажей</h3>
+                <div class="editor-only ui-section">
+                    <button id="btn-create-character">➕ Создать персонажа</button>
+                </div>
+                <div id="character-pool-list" class="char-pool">
+                    </div>
+            </aside>
+        </div>
+    </div>
+
+    <div id="modal-char-card" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="close-char-modal">&times;</span>
+            <div class="char-card-layout">
+                <div class="char-card-visual">
+                    <img id="char-card-img" src="" alt="Форма персонажа">
+                    <div class="editor-only">
+                        <input type="file" id="char-card-image-input" accept="image/*">
+                    </div>
+                </div>
+                <div class="char-card-info">
+                    <input type="text" id="char-card-name" placeholder="Имя...">
+                    <textarea id="char-card-desc" placeholder="Описание..."></textarea>
+                    
+                    <div class="secret-section">
+                        <button id="btn-toggle-secret">Показать скрытые характеристики</button>
+                        <textarea id="char-card-secret" class="hidden" placeholder="Секретные характеристики, скрытые от игроков..."></textarea>
+                    </div>
+
+                    <div class="ui-section">
+                        <h5>Формы персонажа</h5>
+                        <div id="char-forms-buttons"></div>
+                        <div class="editor-only row-buttons" style="margin-top: 5px;">
+                            <button id="btn-add-form">+ Форма</button>
+                        </div>
+                    </div>
+
+                    <div class="ui-section dice-section">
+                        <h5>🎲 Бросок кубика</h5>
+                        <div class="dice-buttons">
+                            <button data-dice="3">d3</button>
+                            <button data-dice="6">d6</button>
+                            <button data-dice="10">d10</button>
+                            <button data-dice="20">d20</button>
+                        </div>
+                        <div id="dice-result">Результат: -</div>
+                    </div>
+
+                    <div class="char-card-actions">
+                        <button id="btn-remove-from-loc" class="btn-danger">Убрать с локации</button>
+                        <button id="btn-kill-char" class="btn-danger">Убить (Сменить статус)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-global-map" class="modal hidden">
+        <div class="modal-content map-modal-content">
+            <span class="close-modal" id="close-map-modal">&times;</span>
+            <h3>Карта мира</h3>
+            <p style="font-size:12px; color:#aaa; margin:0 0 10px 0;">Зажмите ЛКМ/Колесо мыши для перемещения, используйте колесико для зума</p>
+            <div id="map-viewport">
+                <div id="map-grid"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
