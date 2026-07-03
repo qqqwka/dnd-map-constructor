@@ -15,10 +15,10 @@
                 <input type="text" id="new-world-name" placeholder="Название нового мира...">
                 <button id="btn-create-world">Создать новый мир</button>
             </div>
-            <hr>
+            <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
             <div class="upload-group">
                 <label for="upload-world-file" class="file-label">📂 Загрузить мир (.json)</label>
-                <input type="file" id="upload-world-file" accept=".json">
+                <input type="file" id="upload-world-file" accept=".json" style="display: none;">
             </div>
         </div>
     </div>
@@ -47,16 +47,16 @@
                 <div class="ui-section">
                     <h4>Состояния локации</h4>
                     <select id="loc-state-select"></select>
-                    <div class="editor-only row-buttons">
+                    <div class="editor-only row-buttons" style="margin-top: 8px;">
                         <button id="btn-add-state">+ Добавить</button>
                         <button id="btn-delete-state" class="btn-danger">❌ Удалить</button>
                     </div>
                 </div>
 
                 <div class="ui-section editor-only">
-                    <h4>Добавить персонажа на локацию</h4>
+                    <h4>Добавить персонажа</h4>
                     <select id="spawn-character-select"></select>
-                    <button id="btn-spawn-character">Выставить на карту</button>
+                    <button id="btn-spawn-character" style="width: 100%; margin-top: 8px;">Выставить на карту</button>
                 </div>
             </aside>
 
@@ -79,7 +79,7 @@
             <aside class="right-panel">
                 <h3 class="panel-title">Пул персонажей</h3>
                 <div class="editor-only ui-section">
-                    <button id="btn-create-character">➕ Создать персонажа</button>
+                    <button id="btn-create-character" style="width: 100%;">➕ Создать персонажа</button>
                 </div>
                 <div id="character-pool-list" class="char-pool">
                     </div>
@@ -93,8 +93,8 @@
             <div class="char-card-layout">
                 <div class="char-card-visual">
                     <img id="char-card-img" src="" alt="Форма персонажа">
-                    <div class="editor-only">
-                        <input type="file" id="char-card-image-input" accept="image/*">
+                    <div class="editor-only" style="width:100%;">
+                        <input type="file" id="char-card-image-input" accept="image/*" style="width:100%;">
                     </div>
                 </div>
                 <div class="char-card-info">
@@ -102,15 +102,15 @@
                     <textarea id="char-card-desc" placeholder="Описание..."></textarea>
                     
                     <div class="secret-section">
-                        <button id="btn-toggle-secret">Показать скрытые характеристики</button>
-                        <textarea id="char-card-secret" class="hidden" placeholder="Секретные характеристики, скрытые от игроков..."></textarea>
+                        <button id="btn-toggle-secret" style="width: 100%; margin-bottom: 5px;">Показать/Скрыть характеристики</button>
+                        <textarea id="char-card-secret" class="hidden" placeholder="Секретные характеристики..."></textarea>
                     </div>
 
                     <div class="ui-section">
                         <h5>Формы персонажа</h5>
-                        <div id="char-forms-buttons"></div>
-                        <div class="editor-only row-buttons" style="margin-top: 5px;">
-                            <button id="btn-add-form">+ Форма</button>
+                        <div id="char-forms-buttons" class="row-buttons" style="flex-wrap: wrap; margin-bottom: 5px;"></div>
+                        <div class="editor-only row-buttons">
+                            <button id="btn-add-form">+ Добавить форму</button>
                         </div>
                     </div>
 
@@ -125,9 +125,9 @@
                         <div id="dice-result">Результат: -</div>
                     </div>
 
-                    <div class="char-card-actions">
-                        <button id="btn-remove-from-loc" class="btn-danger">Убрать с локации</button>
-                        <button id="btn-kill-char" class="btn-danger">Убить (Сменить статус)</button>
+                    <div class="char-card-actions row-buttons">
+                        <button id="btn-remove-from-loc" class="btn-danger">Убрать с карты</button>
+                        <button id="btn-kill-char" class="btn-danger">Изменить статус (Убить)</button>
                     </div>
                 </div>
             </div>
@@ -137,8 +137,8 @@
     <div id="modal-global-map" class="modal hidden">
         <div class="modal-content map-modal-content">
             <span class="close-modal" id="close-map-modal">&times;</span>
-            <h3>Карта мира</h3>
-            <p style="font-size:12px; color:#aaa; margin:0 0 10px 0;">Зажмите ЛКМ/Колесо мыши для перемещения, используйте колесико для зума</p>
+            <h3>Карта мира (Сетка 50x50)</h3>
+            <p style="font-size:12px; color:#aaa; margin:0 0 10px 0;">Перетаскивайте карту мышкой. Колесико — приближение/отдаление.</p>
             <div id="map-viewport">
                 <div id="map-grid"></div>
             </div>
