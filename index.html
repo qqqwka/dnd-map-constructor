@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DnD Map Constructor</title>
+    <title>DnD Map Constructor Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +12,11 @@
         <div class="menu-box">
             <h1>🎲 DnD Map Constructor</h1>
             <div class="input-group">
-                <input type="text" id="new-world-name" placeholder="Название нового мира...">
+                <input type="text" id="new-world-name" placeholder="Название мира..." value="Новый Мир">
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <span style="font-size:12px; align-self:center; color:#aaa;">Размер сетки:</span>
+                    <input type="number" id="new-world-size" value="100" min="10" max="1000" style="width:80px; text-align:center;">
+                </div>
                 <button id="btn-create-world">Создать новый мир</button>
             </div>
             <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
@@ -25,19 +29,46 @@
 
     <div id="app-screen" class="screen hidden">
         
+        <div id="tabs-bar-container">
+            <div id="tabs-wrapper">
+                </div>
+            <button id="btn-add-tab" class="btn-success">➕ Новая группа</button>
+        </div>
+
         <header>
-            <h2 id="display-world-name">Мир: </h2>
+            <div class="header-left">
+                <h2 id="display-world-name">Мир: </h2>
+                <div class="editor-only" style="display:inline-block; margin-left:15px;">
+                    <span style="font-size:12px; color:#aaa;">Размер мира:</span>
+                    <input type="number" id="edit-world-size" min="1" style="width:60px; padding:3px;">
+                </div>
+            </div>
             <div class="header-buttons">
                 <button id="btn-toggle-mode" class="btn-mode-edit">Режим: Редактор</button>
                 <button id="btn-open-global-map">🗺️ Полная карта</button>
-                <button id="btn-save-world">💾 Сохранить в файл</button>
-                <button id="btn-exit-menu">🚪 Выйти в меню</button>
+                <button id="btn-save-world">💾 Сохранить мир</button>
+                <button id="btn-exit-menu">🚪 Выйти</button>
             </div>
         </header>
 
         <div class="main-layout">
             <aside class="left-panel">
-                <h3 class="panel-title">Локация (<span id="coord-display">25,25</span>)</h3>
+                <div class="ui-section">
+                    <h3 class="panel-title" style="margin-bottom:5px;">Локация (<span id="coord-display">50,50</span>)</h3>
+                    <input type="text" id="loc-name-input" placeholder="Название локации...">
+                </div>
+
+                <div class="ui-section">
+                    <h4>Быстрый переход</h4>
+                    <div style="display:flex; gap:3px; margin-bottom:5px;">
+                        <input type="number" id="teleport-x" placeholder="X" style="padding:5px;">
+                        <input type="number" id="teleport-y" placeholder="Y" style="padding:5px;">
+                        <button id="btn-teleport-coords" style="padding:5px;">Go</button>
+                    </div>
+                    <select id="teleport-name-select">
+                        <option value="">Поиск по имени...</option>
+                    </select>
+                </div>
                 
                 <div class="editor-only ui-section">
                     <h4>Картинка локации</h4>
@@ -53,10 +84,21 @@
                     </div>
                 </div>
 
-                <div class="ui-section editor-only">
-                    <h4>Добавить персонажа</h4>
-                    <select id="spawn-character-select"></select>
-                    <button id="btn-spawn-character" style="width: 100%; margin-top: 8px;">Выставить на карту</button>
+                <div class="ui-section dice-section">
+                    <h4>🎲 Быстрый бросок кубика</h4>
+                    <div class="dice-buttons">
+                        <button data-dice="4">d4</button>
+                        <button data-dice="6">d6</button>
+                        <button data-dice="8">d8</button>
+                        <button data-dice="10">d10</button>
+                        <button data-dice="20">d20</button>
+                        <button data-dice="100">d100</button>
+                    </div>
+                    <div id="main-dice-result">Результат: -</div>
+                </div>
+
+                <div class="ui-section">
+                    <button id="btn-open-char-manager" style="width: 100%; font-weight: bold; background: #2753a7;">👥 Персонажи и Монстры</button>
                 </div>
             </aside>
 
@@ -71,63 +113,57 @@
                     <button class="arrow arrow-w" data-dir="W">⬅️</button>
                     <button class="arrow arrow-nw" data-dir="NW">↖️</button>
 
-                    <div id="location-canvas">
-                        </div>
+                    <div id="location-canvas"></div>
                 </div>
             </main>
+        </div>
+    </div>
 
-            <aside class="right-panel">
-                <h3 class="panel-title">Пул персонажей</h3>
-                <div class="editor-only ui-section">
-                    <button id="btn-create-character" style="width: 100%;">➕ Создать персонажа</button>
-                </div>
-                <div id="character-pool-list" class="char-pool">
-                    </div>
-            </aside>
+    <div id="modal-char-manager" class="modal hidden">
+        <div class="modal-content manager-modal-content">
+            <span class="close-modal" id="close-manager-modal">&times;</span>
+            <h3>👥 Справочник Персонажей</h3>
+            <div class="manager-actions">
+                <input type="text" id="char-search-input" placeholder="Поиск персонажа по имени...">
+                <button id="btn-manager-create-char" class="btn-success">➕ Создать персонажа</button>
+            </div>
+            <div id="manager-char-list" class="manager-grid"></div>
         </div>
     </div>
 
     <div id="modal-char-card" class="modal hidden">
-        <div class="modal-content">
+        <div class="modal-content big-card-content">
             <span class="close-modal" id="close-char-modal">&times;</span>
             <div class="char-card-layout">
                 <div class="char-card-visual">
-                    <img id="char-card-img" src="" alt="Форма персонажа">
+                    <img id="char-card-img" src="" alt="Облик">
                     <div class="editor-only" style="width:100%;">
                         <input type="file" id="char-card-image-input" accept="image/*" style="width:100%;">
                     </div>
                 </div>
                 <div class="char-card-info">
                     <input type="text" id="char-card-name" placeholder="Имя...">
-                    <textarea id="char-card-desc" placeholder="Описание..."></textarea>
+                    <textarea id="char-card-desc" placeholder="Описание и заметки..."></textarea>
                     
                     <div class="secret-section">
                         <button id="btn-toggle-secret" style="width: 100%; margin-bottom: 5px;">Показать/Скрыть характеристики</button>
-                        <textarea id="char-card-secret" class="hidden" placeholder="Секретные характеристики..."></textarea>
+                        <textarea id="char-card-secret" class="hidden" placeholder="Секретные статы (скрыты от игроков)..."></textarea>
                     </div>
 
                     <div class="ui-section">
-                        <h5>Формы персонажа</h5>
+                        <h5>Облики / Формы</h5>
                         <div id="char-forms-buttons" class="row-buttons" style="flex-wrap: wrap; margin-bottom: 5px;"></div>
                         <div class="editor-only row-buttons">
                             <button id="btn-add-form">+ Добавить форму</button>
                         </div>
                     </div>
 
-                    <div class="ui-section dice-section">
-                        <h5>🎲 Бросок кубика</h5>
-                        <div class="dice-buttons">
-                            <button data-dice="3">d3</button>
-                            <button data-dice="6">d6</button>
-                            <button data-dice="10">d10</button>
-                            <button data-dice="20">d20</button>
+                    <div class="char-card-actions">
+                        <button id="btn-card-spawn-here" class="btn-success" style="width:100%; font-weight:bold; margin-bottom:10px;">Выставить персонажа на текущую локацию</button>
+                        <div class="row-buttons">
+                            <button id="btn-remove-from-loc" class="btn-danger">Убрать с карты</button>
+                            <button id="btn-kill-char" class="btn-danger">Статус (Жив/Мертв)</button>
                         </div>
-                        <div id="dice-result">Результат: -</div>
-                    </div>
-
-                    <div class="char-card-actions row-buttons">
-                        <button id="btn-remove-from-loc" class="btn-danger">Убрать с карты</button>
-                        <button id="btn-kill-char" class="btn-danger">Изменить статус (Убить)</button>
                     </div>
                 </div>
             </div>
@@ -137,14 +173,13 @@
     <div id="modal-global-map" class="modal hidden">
         <div class="modal-content map-modal-content">
             <span class="close-modal" id="close-map-modal">&times;</span>
-            <h3>Карта мира (Сетка 50x50)</h3>
-            <p style="font-size:12px; color:#aaa; margin:0 0 10px 0;">Перетаскивайте карту мышкой. Колесико — приближение/отдаление.</p>
+            <h3>Карта мира (<span id="map-dimension-title">100x100</span>)</h3>
             <div id="map-viewport">
                 <div id="map-grid"></div>
             </div>
         </div>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
-
