@@ -5,7 +5,6 @@ let world = {
     characterPool: {}
 };
 
-// Структура вкладок (Команд)
 let teams = [
     { id: "team_default", name: "Группа 1", coords: [50, 50] }
 ];
@@ -29,23 +28,26 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initEventListeners() {
-    // Входные экраны
     document.getElementById('btn-create-world').addEventListener('click', createNewWorld);
     document.getElementById('upload-world-file').addEventListener('change', loadWorldFromFile);
 
-    // Панель верхняя
     document.getElementById('btn-toggle-mode').addEventListener('click', toggleMode);
     document.getElementById('btn-save-world').addEventListener('click', saveWorldToFile);
     document.getElementById('btn-exit-menu').addEventListener('click', () => switchScreen('main-menu'));
     document.getElementById('btn-open-global-map').addEventListener('click', openGlobalMap);
-    document.getElementById('edit-world-size').addEventListener('change', changeWorldSizeInline);
+    
+    // Применение нового размера из редактора карты
+    document.getElementById('btn-apply-map-size').addEventListener('click', applyMapSizeFromModal);
 
-    // Навигация кликами по стрелкам
+    // Изменение названия мира в реальном времени в Редакторе
+    document.getElementById('edit-world-name-input').addEventListener('input', (e) => {
+        world.worldName = e.target.value.trim() || "Без названия";
+    });
+
     document.querySelectorAll('.arrow').forEach(a => {
         a.addEventListener('click', (e) => handleArrowClick(e.currentTarget.dataset.dir));
     });
 
-    // Редактирование параметров локации
     document.getElementById('loc-name-input').addEventListener('input', (e) => {
         const loc = ensureLocationExists(currentCoords[0], currentCoords[1]);
         loc.name = e.target.value;
@@ -60,7 +62,6 @@ function initEventListeners() {
     document.getElementById('btn-add-state').addEventListener('click', addNewLocationState);
     document.getElementById('btn-delete-state').addEventListener('click', deleteLocationState);
 
-    // Быстрые переходы
     document.getElementById('btn-teleport-coords').addEventListener('click', teleportByCoords);
     document.getElementById('teleport-name-select').addEventListener('change', (e) => {
         if (e.target.value) {
@@ -70,16 +71,13 @@ function initEventListeners() {
         }
     });
 
-    // Справочник персонажей
     document.getElementById('btn-open-char-manager').addEventListener('click', openCharManager);
     document.getElementById('close-manager-modal').addEventListener('click', () => document.getElementById('modal-char-manager').classList.add('hidden'));
     document.getElementById('char-search-input').addEventListener('input', renderManagerGrid);
     document.getElementById('btn-manager-create-char').addEventListener('click', createNewCharacterInManager);
 
-    // Вкладки групп
     document.getElementById('btn-add-tab').addEventListener('click', addNewTeamTab);
 
-    // Карточка персонажа
     document.getElementById('close-char-modal').addEventListener('click', () => document.getElementById('modal-char-card').classList.add('hidden'));
     document.getElementById('char-card-image-input').addEventListener('change', (e) => handleImageUpload(e, 'character-form'));
     document.getElementById('char-card-name').addEventListener('input', (e) => updateCharData('name', e.target.value));
@@ -91,7 +89,7 @@ function initEventListeners() {
     document.getElementById('btn-remove-from-loc').addEventListener('click', removeCharacterFromLocation);
     document.getElementById('btn-kill-char').addEventListener('click', toggleKillCharacter);
 
-    // Броски кубиков общего назначения
+    // Слушатель бросков (остались только разрешенные)
     document.querySelectorAll('.dice-buttons button').forEach(b => {
         b.addEventListener('click', () => {
             const side = parseInt(b.dataset.dice);
@@ -100,10 +98,8 @@ function initEventListeners() {
         });
     });
 
-    // Закрытие карты
     document.getElementById('close-map-modal').addEventListener('click', () => document.getElementById('modal-global-map').classList.add('hidden'));
 
-    // Drag-and-drop
     const canvas = document.getElementById('location-canvas');
     canvas.addEventListener('dragover', (e) => e.preventDefault());
     canvas.addEventListener('drop', handleTokenDrop);
@@ -145,8 +141,11 @@ function createNewWorld() {
     setupAppScreen();
 }
 
-function changeWorldSizeInline(e) {
-    let newSize = parseInt(e.target.value);
+function applyMapSizeFromModal() {
+    const input = document.getElementById('map-edit-size-input');
+    let newSize = parseInt(input.value);
+    if (!newSize || newSize < 10) newSize = 10;
+
     let minNeeded = 10;
     Object.keys(world.locations).forEach(k => {
         const [x, y] = k.split(',').map(Number);
@@ -155,24 +154,24 @@ function changeWorldSizeInline(e) {
     });
 
     if (newSize < minNeeded) {
-        alert(`Нельзя сжать мир меньше чем ${minNeeded}x${minNeeded}, так как там уже есть созданные локации.`);
-        document.getElementById('edit-world-size').value = world.gridSize;
+        alert(`Нельзя сжать мир меньше чем ${minNeeded}x${minNeeded}, так как на крайних клетках есть локации.`);
+        input.value = world.gridSize;
         return;
     }
+    
     world.gridSize = newSize;
+    openGlobalMap(); // Перерендерить карту с новыми размерами
 }
 
 function setupAppScreen() {
-    document.getElementById('display-world-name').innerText = `Мир: ${world.worldName}`;
-    document.getElementById('edit-world-size').value = world.gridSize;
+    document.getElementById('display-world-name-text').innerText = world.worldName;
+    document.getElementById('edit-world-name-input').value = world.worldName;
     currentMode = 'edit';
     
     const btn = document.getElementById('btn-toggle-mode');
     btn.innerText = 'Режим: Редактор';
     btn.className = 'btn-mode-edit';
     document.body.className = 'edit-mode';
-    
-    document.querySelectorAll('.editor-only').forEach(el => el.classList.remove('hidden'));
     
     switchScreen('app-screen');
     renderTabs();
@@ -188,18 +187,17 @@ function toggleMode() {
         btn.innerText = 'Режим: Редактор';
         btn.className = 'btn-mode-edit';
         document.body.className = 'edit-mode';
-        document.querySelectorAll('.editor-only').forEach(el => el.classList.remove('hidden'));
+        document.getElementById('edit-world-name-input').value = world.worldName;
     } else {
         btn.innerText = 'Режим: Игра';
         btn.className = 'btn-mode-play';
         document.body.className = 'play-mode';
-        document.querySelectorAll('.editor-only').forEach(el => el.classList.add('hidden'));
+        document.getElementById('display-world-name-text').innerText = world.worldName;
     }
     renderTabs();
     renderCurrentLocation();
 }
 
-/* Система вкладок (Команды) */
 function renderTabs() {
     const wrapper = document.getElementById('tabs-wrapper');
     wrapper.innerHTML = '';
@@ -208,7 +206,6 @@ function renderTabs() {
         const tab = document.createElement('div');
         tab.className = `team-tab ${t.id === activeTeamId ? 'active-tab' : ''}`;
         
-        // В режиме игры можно переименовать вкладку, в редакторе просто текст
         if (currentMode === 'play') {
             const input = document.createElement('input');
             input.type = 'text';
@@ -263,9 +260,7 @@ function addNewTeamTab() {
 
 function syncActiveTeamCoords() {
     const activeTeam = teams.find(t => t.id === activeTeamId);
-    if (activeTeam) {
-        activeTeam.coords = [...currentCoords];
-    }
+    if (activeTeam) activeTeam.coords = [...currentCoords];
     renderTabs();
 }
 
@@ -312,32 +307,22 @@ function renderCurrentLocation() {
                 openCharacterCard(cInst.id);
             });
 
-            // ПКМ изменение размеров в редакторе
             token.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 if (currentMode !== 'edit') return;
-                
-                if (activeResizeTokenId === cInst.id) {
-                    activeResizeTokenId = null;
-                    renderCurrentLocation();
-                } else {
-                    activeResizeTokenId = cInst.id;
-                    renderCurrentLocation();
-                }
+                activeResizeTokenId = activeResizeTokenId === cInst.id ? null : cInst.id;
+                renderCurrentLocation();
             });
 
             if (currentMode === 'edit' && activeResizeTokenId === cInst.id) {
                 const resizePanel = document.createElement('div');
                 resizePanel.className = 'token-resize-panel';
-                
                 const plusBtn = document.createElement('button');
                 plusBtn.innerText = '＋';
                 plusBtn.onclick = (ev) => { ev.stopPropagation(); cInst.size = (cInst.size || 75) + 5; renderCurrentLocation(); };
-                
                 const minusBtn = document.createElement('button');
                 minusBtn.innerText = '－';
                 minusBtn.onclick = (ev) => { ev.stopPropagation(); cInst.size = Math.max(30, (cInst.size || 75) - 5); renderCurrentLocation(); };
-                
                 resizePanel.appendChild(plusBtn);
                 resizePanel.appendChild(minusBtn);
                 token.appendChild(resizePanel);
@@ -355,11 +340,8 @@ function renderCurrentLocation() {
     directions.forEach(dir => {
         const arrowBtn = document.querySelector(`.arrow-${dir.toLowerCase()}`);
         if (!arrowBtn) return;
-        if (loc.connections && loc.connections[dir]) {
-            arrowBtn.classList.remove('not-connected');
-        } else {
-            arrowBtn.classList.add('not-connected');
-        }
+        if (loc.connections && loc.connections[dir]) arrowBtn.classList.remove('not-connected');
+        else arrowBtn.classList.add('not-connected');
     });
 }
 
@@ -497,7 +479,6 @@ function deleteLocationState() {
     }
 }
 
-/* Справочник Персонажей */
 function openCharManager() {
     document.getElementById('modal-char-manager').classList.remove('hidden');
     renderManagerGrid();
@@ -615,10 +596,11 @@ function toggleKillCharacter() {
 /* Глобальная карта */
 function openGlobalMap() {
     document.getElementById('map-dimension-title').innerText = `${world.gridSize}x${world.gridSize}`;
+    document.getElementById('map-edit-size-input').value = world.gridSize;
+
     const grid = document.getElementById('map-grid');
     grid.innerHTML = '';
 
-    // Оптимизированный рендер структуры строк
     for (let y = 1; y <= world.gridSize; y++) {
         const row = document.createElement('div');
         row.className = 'map-row';
@@ -651,7 +633,6 @@ function openGlobalMap() {
                 }
             }
 
-            // Запоминаем координаты в ячейку
             cell.dataset.x = x;
             cell.dataset.y = y;
             row.appendChild(cell);
@@ -659,7 +640,6 @@ function openGlobalMap() {
         grid.appendChild(row);
     }
 
-    // Автоматическая фокусировка на выбранной локации
     const cellWidth = 70; 
     const vp = document.getElementById('map-viewport');
     mapPanX = (vp.clientWidth / 2) - (currentCoords[0] * cellWidth * mapScale) + (cellWidth * mapScale / 2);
@@ -679,10 +659,10 @@ function initMapControls() {
     const vp = document.getElementById('map-viewport');
     let isDrag = false;
     let sX, sY;
-    let moveCount = 0; // Для отсечения микро-движений зажатия мыши
+    let moveCount = 0;
 
     vp.onmousedown = (e) => {
-        if (e.target.classList.contains('close-modal')) return;
+        if (e.target.classList.contains('close-modal') || e.target.closest('.editor-only')) return;
         isDrag = true;
         moveCount = 0;
         sX = e.clientX - mapPanX;
@@ -701,7 +681,6 @@ function initMapControls() {
         if (!isDrag) return;
         isDrag = false;
         
-        // Защита от ложного клика: если сдвинули мышь больше чем на 5px, не телепортируем
         if (moveCount < 5) {
             const cell = e.target.closest('.map-cell');
             if (cell) {
