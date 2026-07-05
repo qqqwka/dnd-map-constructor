@@ -103,3 +103,5 @@ body.play-mode .arrow.not-connected { display: none; }
 .map-cell img { width: 100%; height: 100%; object-fit: cover; }
 .map-cell.active-cell { box-shadow: inset 0 0 12px #d19a66; border: 2px solid #d19a66; background: #2a2015; z-index: 5; }
 .map-cell-char { position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 1px solid #fff; bottom: 2px; right: 2px; background-size: cover; background-position: center; }
+
+
